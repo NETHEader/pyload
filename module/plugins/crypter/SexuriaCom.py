@@ -9,6 +9,7 @@ class SexuriaCom(Crypter):
     __version__ = "0.10"
     __description__ = """Sexuria.com decrypter plugin"""
     __license__ = "GPLv3"
+    __status__  = "testing"
     __authors__ = [("NETHead", "NETHead.AT.gmx.DOT.net")]
     __pattern__ = r'http://(?:www\.)?sexuria\.com/(v1/)?(Pornos_Kostenlos_.+?_(\d+)\.html|dl_links_\d+_\d+\.html|id=\d+\&part=\d+\&link=\d+)'
     __config__  = [("use_subfolder", "bool", "Save package to subfolder"                 , True),
@@ -38,8 +39,8 @@ class SexuriaCom(Crypter):
 
     def decrypt_links(self, url):
         linklist = []
-        name = self.package.name
-        folder = self.package.folder
+        name     = self.package.name
+        folder   = self.package.folder
         password = None
 
         if re.match(self.PATTERN_SUPPORTED_MAIN, url, re.I):
@@ -86,7 +87,7 @@ class SexuriaCom(Crypter):
             else:
                 for link in links:
                     link = link.replace("http://sexuria.com/", "http://www.sexuria.com/")
-                    finallink = self.load(link, just_header = True)['location']
+                    finallink = self.load(link, just_header=True)['location']
                     if not finallink or ("sexuria.com/" in finallink):
                         self.log_error(_("Broken for link: %s") % link)
                     else:
