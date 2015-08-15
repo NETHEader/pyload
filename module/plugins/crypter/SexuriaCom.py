@@ -7,15 +7,17 @@ class SexuriaCom(Crypter):
     __name__    = "SexuriaCom"
     __type__    = "crypter"
     __version__ = "0.10"
-    __description__ = """Sexuria.com decrypter plugin"""
-    __license__ = "GPLv3"
     __status__  = "testing"
-    __authors__ = [("NETHead", "NETHead.AT.gmx.DOT.net")]
+    
     __pattern__ = r'http://(?:www\.)?sexuria\.com/(v1/)?(Pornos_Kostenlos_.+?_(\d+)\.html|dl_links_\d+_\d+\.html|id=\d+\&part=\d+\&link=\d+)'
     __config__  = [("use_subfolder", "bool", "Save package to subfolder"                 , True),
                   ("subfolder_per_package", "bool", "Create a subfolder for each package", True)]
 
-    # Constants
+    __description__ = """Sexuria.com decrypter plugin"""
+    __license__ = "GPLv3"
+    __authors__ = [("NETHead", "NETHead.AT.gmx.DOT.net")]
+
+    #: Constants
     PATTERN_SUPPORTED_MAIN     = r'http://(www\.)?sexuria\.com/(v1/)?Pornos_Kostenlos_.+?_(\d+)\.html'
     PATTERN_SUPPORTED_CRYPT    = r'http://(www\.)?sexuria\.com/(v1/)?dl_links_\d+_(?P<ID>\d+)\.html'
     PATTERN_SUPPORTED_REDIRECT = r'http://(www\.)?sexuria\.com/out\.php\?id=(?P<ID>\d+)\&part=\d+\&link=\d+'
@@ -26,11 +28,11 @@ class SexuriaCom(Crypter):
     LIST_PWDIGNORE             = ["Kein Passwort", "-"]
 
     def decrypt(self, pyfile):
-        # Init
+        #: Init
         self.pyfile = pyfile
         self.package = pyfile.package()
 
-        # Decrypt and add links
+        #: Decrypt and add links
         package_name, self.links, folder_name, package_pwd = self.decrypt_links(self.pyfile.url)
         if package_pwd:
             self.pyfile.package().password = package_pwd
@@ -44,23 +46,23 @@ class SexuriaCom(Crypter):
         password = None
 
         if re.match(self.PATTERN_SUPPORTED_MAIN, url, re.I):
-            # Processing main page
+            #: Processing main page
             html = self.load(url)
             links = re.findall(self.PATTERN_DL_LINK_PAGE, html, re.I)
             for link in links:
                 linklist.append("http://sexuria.com/v1/" + link)
 
         elif re.match(self.PATTERN_SUPPORTED_REDIRECT, url, re.I):
-            # Processing direct redirect link (out.php), redirecting to main page
+            #: Processing direct redirect link (out.php), redirecting to main page
             id = re.search(self.PATTERN_SUPPORTED_REDIRECT, url, re.I).group('ID')
             if id:
                 linklist.append("http://sexuria.com/v1/Pornos_Kostenlos_liebe_%s.html" % id)
 
         elif re.match(self.PATTERN_SUPPORTED_CRYPT, url, re.I):
-            # Extract info from main file
+            #: Extract info from main file
             id = re.search(self.PATTERN_SUPPORTED_CRYPT, url, re.I).group('ID')
             html = self.load("http://sexuria.com/v1/Pornos_Kostenlos_info_%s.html" % id) #, decode=True
-            # Webpage title / Package name
+            #: Webpage title / Package name
             titledata = re.search(self.PATTERN_TITLE, html, re.I)
             if not titledata:
                 self.log_warning("No title data found, has site changed?")
@@ -69,7 +71,7 @@ class SexuriaCom(Crypter):
                 if title:
                     name = folder = title
                     self.log_debug("Package info found, name [%s] and folder [%s]" % (name, folder))
-            # Password
+            #: Password
             pwddata = re.search(self.PATTERN_PASSWORD, html, re.I | re.S)
             if not pwddata:
                 self.log_warning("No password data found, has site changed?")
@@ -79,7 +81,7 @@ class SexuriaCom(Crypter):
                     password = pwd
                     self.log_debug("Package info found, password [%s]" % password)
 
-            # Process links (dl_link)
+            #: Process links (dl_link)
             html = self.load(url)
             links = re.findall(self.PATTERN_REDIRECT_LINKS, html, re.I)
             if not links:
@@ -93,12 +95,12 @@ class SexuriaCom(Crypter):
                     else:
                         linklist.append(finallink)
 
-        # Log result
+        #: Log result
         if not linklist:
             self.fail(_("Unable to extract links (maybe plugin out of date?)"))
         else:
             for i, link in enumerate(linklist):
                 self.log_debug("Supported link %d/%d: %s" % (i+1, len(linklist), link))
 
-        # Done, return to caller
+        #: All done, return to caller
         return name, linklist, folder, password
